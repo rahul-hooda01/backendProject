@@ -1,10 +1,10 @@
 # this is readme file just for first commit
 npm init> setup with npm
-# 2
+#
 git init> setup with git attch branch
-# 3
+#
 in package.json file> type: 'module" and change scripts 
-# 4
+#
 install dev dependencies: npm i -D nodemon
 #
 made  file Public> temp 
@@ -32,6 +32,7 @@ add gthese things there
     "semi": true
 }
 
-# make .prettierignore file
+# 
+make .prettierignore file
 
 
