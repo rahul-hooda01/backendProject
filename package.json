@@ -1,7 +1,7 @@
 {
   "name": "professional_backend_setup",
   "version": "1.0.0",
-  "description": "only setup and structure",
+  "description": "backendProject",
   "main": "index.js",
   "type": "module",
   "scripts": {
