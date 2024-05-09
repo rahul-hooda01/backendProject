@@ -3,7 +3,7 @@ import connectDB from "../db/index.js";
 import { app } from "./app.js";
 
 dotenv.config({
-    path:'./env'
+    path:'./.env'
 });
 // we use import statement for dotenv and set config path in it, and now we will use experimental fetaure by adding some commands in run script -r dotenv/confiq --experimental-json-modules
 
