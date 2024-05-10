@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { registerUser } from "../controllers/users.controller.js";
+import { loginUser, logoutUser, refreshAcessToken, registerUser } from "../controllers/users.controller.js";
 import { upload } from "../middlewares/multer.middleware.js"
+import { verifyJWT } from "../middlewares/auth.middleware.js";
 const router = Router()
 
 router.route("/register").post(
@@ -14,7 +15,12 @@ router.route("/register").post(
             maxCount:1
         }
     ]),
-    registerUser);
+    registerUser
+);
 
+router.route("/login").post(loginUser)
 
+// secured routes
+router.route("/logout").post(verifyJWT, logoutUser) //is middleware m cookies se jwt token verify krke uski id se db m call ki or user info req m bhejdi taaki on that basis logout kr ske
+router.route("/refresh-token").post(refreshAcessToken);
 export default router;
