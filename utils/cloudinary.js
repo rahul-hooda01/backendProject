@@ -15,7 +15,7 @@ const upploadOnCloudinary = async(localPath)=>{
             { resource_type: 'auto'})
 
         // file succesfully upload
-        // console.log('file succesfully upload', response.url);
+        // console.log('file succesfully upload', response);
         fs.unlinkSync(localPath); //remove completely then return response;
         return response;
     } catch (error) {
@@ -23,5 +23,17 @@ const upploadOnCloudinary = async(localPath)=>{
         return null;
     }
 }
+const deleteFromClodinary = async(fileUrl)=>{
 
-export {upploadOnCloudinary};
+    const publicId = fileUrl?.split('/').pop().split('.')[0]; 
+    try {
+        cloudinary.api
+        .delete_resources([publicId], 
+            { type: 'upload', resource_type: 'image' })
+        .then(console.log("File delete successfully"));
+    } catch (error) {
+        console.log("Error while deleting old file");
+    }
+}
+
+export {upploadOnCloudinary, deleteFromClodinary};

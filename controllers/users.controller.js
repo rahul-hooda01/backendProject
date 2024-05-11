@@ -1,7 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import {ApiError} from "../utils/ApiError.js"
 import { User } from "../models/user.model.js";
-import { upploadOnCloudinary } from "../utils/cloudinary.js"
+import { deleteFromClodinary, upploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 
@@ -170,7 +170,7 @@ const logoutUser = asyncHandler(async(req,res,next)=>{
             }
         },
         {
-            new: true  // aise kr skte h taki response m new true dikhe 
+            new: true  // aise kr skte h taki response m Returning the Updated Document
         }
     )
     const options = {
@@ -231,4 +231,86 @@ const refreshAcessToken = asyncHandler(async(req,res,next)=>{
     }
 })
 
-export { registerUser, loginUser, logoutUser, refreshAcessToken};
+const currentPasswordChange = asyncHandler(async(req,res,next)=>{ // ye password tbhi change ho skta h jb user loggedIn ho
+    const {oldPassword, newPassword} = req.body;
+
+    const user = await User.findById(req.user?._id) // auth middleware se user hmare pass h
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword); // means jo existing password diya h vo correct h?
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Invalid  old password ");
+    }
+    user.password = newPassword;  // ye user m password field m set kr diya , but save bhi krna hota h
+    await user.save({validateBeforeSave:false});
+     return res.status(200).json(new ApiResponse(200, {}, "password change successfully"));
+
+})
+
+const getCurrentUser = asyncHandler(async(req,res,next)=>{
+    return res.status(200).json(new ApiResponse(200, req.user, "current user fetch sucesfully"));
+})
+
+const updateAccountDetails = asyncHandler(async(req,res,next)=>{
+    const {email, fullName} = req.body;
+    if (!(email || fullName)){
+        throw new ApiError(400, "all fields are required");
+    }
+    const user = await User.findByIdAndUpdate(req.user?._id, //accept 3 parameter
+        {
+            $set:{
+                fullName,
+                email:email //aise bhi kr skte h
+            }
+        },
+        {new :true} // agar new true h , to updated info return krta h
+    ).select("-password");
+
+    res
+    .status(200)
+    .json(new ApiResponse(200, user, "account details update succeessfully"));
+})
+
+const updateUserAvatar = asyncHandler(async(req,res,next)=>{
+
+    const avatarLocalPath = req.file?.path; // files nhi liya kyuki route m ik hi file upload krne ko di h multer se to hi req.file access kr pa rhe h
+    if (!avatarLocalPath){
+        throw new ApiError(400, "Avatar file is missing");
+    }
+   try {
+     const newAvatar = await upploadOnCloudinary(avatarLocalPath);
+     if(!newAvatar){
+         throw new ApiError(400, "Error while uploading avatar");
+     }
+     const user = await User.findById(req.user?._id).select("-password -refreshToken");
+     deleteFromClodinary(user.avatar);    
+     
+     user.avatar = newAvatar?.url;
+     await user.save({validateBeforeSave: false});
+     res.status(200).json(new ApiResponse(200, user, "avatar image updated successfully"))
+   } catch (error) {
+    throw new ApiError(400, "Error while uploading avatar")
+   }
+})
+const updateUserCoverImage = asyncHandler(async(req,res,next)=>{
+
+    const coverImageLocalPath = req.file?.path; // files nhi liya kyuki route m ik hi file upload krne ko di h multer se to hi req.file access kr pa rhe h
+    if (!coverImageLocalPath){
+        throw new ApiError(400, "coverImage file is missing");
+    }
+    try {
+        const newCoverImage = await upploadOnCloudinary(coverImageLocalPath);
+        if(!newCoverImage){
+            throw new ApiError(400, "Error while uploading cover Image");
+        }
+        
+        const user = await User.findById(req.user?._id).select("-password -refreshToken");
+        deleteFromClodinary(user.coverImage);    
+        
+        user.coverImage = newCoverImage?.url;
+        await user.save({validateBeforeSave: false});
+        res.status(200).json(new ApiResponse(200, user, "coverImage updated successfully"))
+      } catch (error) {
+       throw new ApiError(400, "Error while uploading coverImage")
+      }
+})
+
+export { registerUser, loginUser, logoutUser, refreshAcessToken, currentPasswordChange,getCurrentUser, updateAccountDetails,updateUserAvatar, updateUserCoverImage};
